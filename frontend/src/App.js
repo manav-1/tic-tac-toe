@@ -50,21 +50,24 @@ export default function Game() {
       setConnected(false);
     }
 
+    function onGameUpdate(gameHistory) {
+      setCurrentSquares(gameHistory);
+    }
+
+    function updateWinner(winner) {
+      setWinner(winner);
+    }
+
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
-
-    socket.on("gameUpdate", (gameHistory) => {
-      console.log("gameUpdate", gameHistory);
-      setCurrentSquares(gameHistory);
-    });
-
-    socket.on("winner", (winner) => {
-      setWinner(winner);
-    });
+    socket.on("gameUpdate", onGameUpdate);
+    socket.on("winner", updateWinner);
 
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
+      socket.off("gameUpdate", onGameUpdate);
+      socket.off("winner", updateWinner);
     };
   }, []);
 

@@ -37,7 +37,8 @@ function calculateWinner(squares) {
 
 const players = [];
 
-let turn = "X";
+let turn = null;
+let winner = null;
 
 io.on("connection", (socket) => {
   console.log("A user connected");
@@ -55,25 +56,28 @@ io.on("connection", (socket) => {
     turn = players[0];
   }
 
-  socket.on("message", (message) => {
-    console.log(message);
-    io.emit("message", message);
-  });
-
   socket.on("move", (squareNumber) => {
+    // if only one player in the lobby, do nothing
     if (players.length < 2) {
       return;
     }
+    // if it's not your turn, do nothing
     if (turn !== socket.id) {
       return;
     }
+    // if the square is already filled, do nothing
     if (gameHistory[squareNumber] !== null) {
       return;
     }
+
+    if (winner) {
+      io.emit("winner", null);
+    }
+
     gameHistory[squareNumber] = turn;
     turn = turn === players[0] ? players[1] : players[0];
     io.emit("gameUpdate", gameHistory);
-    const winner = calculateWinner(gameHistory);
+    winner = calculateWinner(gameHistory);
     if (winner) {
       io.emit("winner", winner);
       gameHistory.fill(null);
@@ -82,13 +86,10 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log("A user disconnected");
+    // remove the player from the game and restart the game with empty history
     players.splice(players.indexOf(socket.id), 1);
     gameHistory.fill(null);
   });
-});
-
-app.get("/history", (req, res) => {
-  res.json(gameHistory);
 });
 
 server.listen(3005, () => {
