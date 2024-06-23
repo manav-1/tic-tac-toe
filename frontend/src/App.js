@@ -85,6 +85,7 @@ export default function Game() {
             <div>You lost the game</div>
           )
         ) : null}
+        <div>You are X</div>
         <Board squares={currentSquares} />
       </div>
     </div>
